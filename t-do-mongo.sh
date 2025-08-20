@@ -308,6 +308,10 @@ fi
 
 # Test 6: Test basic MongoDB operations
 log "Testing basic MongoDB operations..."
+
+# Create mongodb client directory to avoid permission issues
+mkdir -p ~/.mongodb 2>/dev/null || true
+
 TEST_RESULT=$(mongosh --eval "
 try {
     use testdb;
@@ -356,7 +360,11 @@ fi
 
 # Test 8: Check MongoDB logs for errors
 log "Checking MongoDB logs for errors..."
-ERROR_COUNT=$(sudo grep -c "ERROR" /var/log/mongodb/mongod.log 2>/dev/null || echo "0")
+ERROR_COUNT=$(sudo grep -c "ERROR" /var/log/mongodb/mongod.log 2>/dev/null | head -1 || echo "0")
+# Clean any newlines or extra characters
+ERROR_COUNT=$(echo "$ERROR_COUNT" | tr -d '\n\r' | grep -o '[0-9]*' | head -1)
+ERROR_COUNT=${ERROR_COUNT:-0}
+
 if [[ "$ERROR_COUNT" -eq 0 ]]; then
     success "No errors found in MongoDB logs"
 else
