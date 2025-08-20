@@ -178,7 +178,15 @@ log "Verifying mongodb user..."
 if id mongodb &>/dev/null; then
     success "MongoDB user exists: $(id mongodb)"
 else
-    error "MongoDB user does not exist"
+    warning "MongoDB user does not exist, recreating..."
+    # Recreate mongodb user and group
+    sudo groupadd mongodb 2>/dev/null || true
+    sudo useradd --system --no-create-home --shell /bin/false --gid mongodb mongodb
+    if id mongodb &>/dev/null; then
+        success "MongoDB user recreated: $(id mongodb)"
+    else
+        error "Failed to create mongodb user"
+    fi
 fi
 
 # Create data directories
